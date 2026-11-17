@@ -102,10 +102,32 @@
       <% books.forEach(function(book) { %>
         <div class="col-sm-6 col-md-4 col-xl-3">
           <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative">
-            <!-- Top Book Header Graphic -->
-            <div class="book-cover-placeholder">
-              <i class="bi bi-book fs-1 mb-2 text-white-50"></i>
-              <span class="badge bg-light text-dark small fw-medium"><%= book.category || 'General' %></span>
+            <!-- Top Book Cover Graphic / Real Cover -->
+            <div class="book-cover-container position-relative overflow-hidden bg-dark text-center">
+              <% 
+                const cleanIsbn = book.isbn ? book.isbn.replace(/[^0-9Xx]/g, '') : '';
+                const fallbackImg = cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg` : '';
+                const displayImg = book.coverImage && book.coverImage.trim() !== '' ? book.coverImage : fallbackImg;
+              %>
+              <% if (displayImg) { %>
+                <img src="<%= displayImg %>" 
+                     alt="<%= book.title %>" 
+                     class="book-cover-img" 
+                     loading="lazy"
+                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                <div class="book-cover-placeholder d-none">
+                  <i class="bi bi-book fs-1 mb-2 text-white-50"></i>
+                  <span class="badge bg-light text-dark small fw-medium"><%= book.category || 'General' %></span>
+                </div>
+              <% } else { %>
+                <div class="book-cover-placeholder">
+                  <i class="bi bi-book fs-1 mb-2 text-white-50"></i>
+                  <span class="badge bg-light text-dark small fw-medium"><%= book.category || 'General' %></span>
+                </div>
+              <% } %>
+              <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white small fw-medium shadow-sm">
+                <%= book.category || 'General' %>
+              </span>
             </div>
 
             <div class="card-body d-flex flex-column p-3">

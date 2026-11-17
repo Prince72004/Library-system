@@ -671,7 +671,7 @@ module.exports = {
   // Process Add Book
   postAddBook: async (req, res) => {
     try {
-      const { title, author, category, isbn, publisher, edition, shelfLocation, totalCopies, description } = req.body;
+      const { title, author, category, isbn, publisher, edition, shelfLocation, coverImage, totalCopies, description } = req.body;
 
       if (!title || !author) {
         req.flash('error_msg', 'Book title and author are required.');
@@ -691,6 +691,7 @@ module.exports = {
         publisher: publisher ? publisher.trim() : '',
         edition: edition ? edition.trim() : '',
         shelfLocation: shelfLocation ? shelfLocation.trim() : 'Main Stack',
+        coverImage: coverImage ? coverImage.trim() : '',
         totalCopies: copies,
         availableCopies: copies,
         availability: copies > 0,
@@ -746,7 +747,7 @@ module.exports = {
   // Process Edit Book
   postEditBook: async (req, res) => {
     try {
-      const { title, author, category, isbn, publisher, edition, shelfLocation, totalCopies, availableCopies, description } = req.body;
+      const { title, author, category, isbn, publisher, edition, shelfLocation, coverImage, totalCopies, availableCopies, description } = req.body;
 
       const book = await Book.findById(req.params.id);
       if (!book) {
@@ -761,6 +762,7 @@ module.exports = {
       book.publisher = publisher ? publisher.trim() : '';
       book.edition = edition ? edition.trim() : '';
       book.shelfLocation = shelfLocation ? shelfLocation.trim() : '';
+      if (typeof coverImage !== 'undefined') book.coverImage = coverImage.trim();
       book.description = description ? description.trim() : '';
 
       let targetCopies = parseInt(totalCopies);

@@ -14,12 +14,31 @@
   <div class="row g-4">
     <!-- Left Cover Mockup Card -->
     <div class="col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden text-center p-4">
-        <div class="py-5 bg-dark text-white rounded-3 mb-3 shadow-inner">
-          <i class="bi bi-book-half display-1 text-primary"></i>
-          <h5 class="mt-3 px-3 fw-bold text-white"><%= book.title %></h5>
-          <span class="badge bg-primary px-3 py-1"><%= book.category %></span>
-        </div>
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden text-center p-3 p-md-4">
+        <% 
+          const cleanIsbnDetail = book.isbn ? book.isbn.replace(/[^0-9Xx]/g, '') : '';
+          const fallbackImgDetail = cleanIsbnDetail ? `https://covers.openlibrary.org/b/isbn/${cleanIsbnDetail}-L.jpg` : '';
+          const displayImgDetail = book.coverImage && book.coverImage.trim() !== '' ? book.coverImage : fallbackImgDetail;
+        %>
+        <% if (displayImgDetail) { %>
+          <div class="book-detail-cover-wrapper mb-3 rounded-3 overflow-hidden shadow-sm position-relative">
+            <img src="<%= displayImgDetail %>" 
+                 alt="<%= book.title %>" 
+                 class="img-fluid rounded-3 book-detail-cover-img"
+                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+            <div class="py-5 bg-dark text-white rounded-3 d-none shadow-inner">
+              <i class="bi bi-book-half display-1 text-primary"></i>
+              <h5 class="mt-3 px-3 fw-bold text-white"><%= book.title %></h5>
+              <span class="badge bg-primary px-3 py-1"><%= book.category %></span>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="py-5 bg-dark text-white rounded-3 mb-3 shadow-inner">
+            <i class="bi bi-book-half display-1 text-primary"></i>
+            <h5 class="mt-3 px-3 fw-bold text-white"><%= book.title %></h5>
+            <span class="badge bg-primary px-3 py-1"><%= book.category %></span>
+          </div>
+        <% } %>
 
         <div class="d-flex justify-content-around text-center py-2 border-top">
           <div>
