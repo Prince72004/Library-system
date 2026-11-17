@@ -1153,6 +1153,54 @@ module.exports = {
     }
   },
 
+  // Add New Staff User - GET
+  getAddStaffUser: async (req, res) => {
+    res.render('staff/add-staff-user', {
+      title: 'Add Staff Account',
+      page: 'staff-users'
+    });
+  },
+
+  // Add New Staff User - POST
+  postAddStaffUser: async (req, res) => {
+    try {
+      const { name, email, password, phone, department } = req.body;
+      const errors = [];
+
+      if (!name || !email || !password) errors.push('Name, Email, and Password are required.');
+      if (password && password.length < 6) errors.push('Password must be at least 6 characters.');
+
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) errors.push('An account with this email already exists.');
+
+      if (errors.length > 0) {
+        errors.forEach(e => req.flash('error_msg', e));
+        return res.redirect('/staff/users/add-staff');
+      }
+
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await User.create({
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        role: 'STAFF',
+        phone: phone || '',
+        department: department || 'Library Administration',
+        accountStatus: 'ACTIVE',
+        isActive: true
+      });
+
+      req.flash('success_msg', `Staff account for ${name} created successfully!`);
+      res.redirect('/staff/users?role=STAFF');
+    } catch (err) {
+      console.error('Error adding staff user:', err);
+      req.flash('error_msg', 'Failed to create staff account. Please try again.');
+      res.redirect('/staff/users/add-staff');
+    }
+  },
+
   // System Settings View (Configurable fine rate, max books, due period)
   getSettings: async (req, res) => {
     try {
