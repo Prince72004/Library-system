@@ -11,6 +11,9 @@ const loadNotifications = require('./middleware/notifications');
 
 const app = express();
 
+// Trust reverse proxy (Render / Cloudflare)
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
@@ -95,7 +98,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`[Server] Library System running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Server] Library System running on port ${PORT}`);
   console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
 });

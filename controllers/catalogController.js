@@ -66,8 +66,18 @@ module.exports = {
       });
     } catch (err) {
       console.error('Error in getCatalog:', err);
-      req.flash('error_msg', 'Failed to retrieve book catalog.');
-      res.redirect('/');
+      req.flash('error_msg', 'Could not load full catalog from database.');
+      res.render('catalog/index', {
+        title: 'Online Book Catalog - AMU CS Library',
+        page: 'catalog',
+        books: [],
+        categories: [],
+        searchQuery: search || '',
+        selectedCategory: 'All',
+        selectedAvailability: 'all',
+        pagination: { totalPages: 1, currentPage: 1, totalBooks: 0 },
+        selectedSort: sort || 'title'
+      });
     }
   },
 
