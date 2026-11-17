@@ -1,0 +1,104 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container py-4 flex-grow-1">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-send-plus fs-2"></i>
+            </div>
+            <div>
+              <span class="badge bg-primary-subtle text-primary fw-bold">SERVICE REQUEST WORKFLOW (FR-004)</span>
+              <h3 class="fw-bold text-dark mb-0">Submit Service Request</h3>
+              <p class="text-muted small mb-0">Submit a reservation, loan renewal, book condition complaint, or new title suggestion</p>
+            </div>
+          </div>
+
+          <form action="/patron/request-submit" method="POST">
+            <!-- Request Type Selector -->
+            <div class="mb-4">
+              <label for="requestTypeSelect" class="form-label fw-bold">Request Category <span class="text-danger">*</span></label>
+              <select class="form-select form-select-lg" id="requestTypeSelect" name="type" required>
+                <option value="RESERVATION" <%= defaultType === 'RESERVATION' ? 'selected' : '' %>>Book Reservation (Reserve an existing title)</option>
+                <option value="RENEWAL" <%= defaultType === 'RENEWAL' ? 'selected' : '' %>>Loan Renewal (Extend return due date)</option>
+                <option value="COMPLAINT" <%= defaultType === 'COMPLAINT' ? 'selected' : '' %>>Complaint / Issue (Damaged/lost book, billing)</option>
+                <option value="SUGGESTION" <%= defaultType === 'SUGGESTION' ? 'selected' : '' %>>New Title Suggestion (Recommend book purchase)</option>
+              </select>
+            </div>
+
+            <!-- Reservation Field (Select Book from catalog) -->
+            <div id="reservationFields" class="mb-4">
+              <label for="bookSelect" class="form-label fw-semibold">Select Book from Catalog <span class="text-danger">*</span></label>
+              <select class="form-select" id="bookSelect" name="bookId">
+                <option value="">-- Choose Book --</option>
+                <% allBooks.forEach(function(b) { %>
+                  <option value="<%= b._id %>" <%= selectedBookId && selectedBookId.toString() === b._id.toString() ? 'selected' : '' %>>
+                    <%= b.title %> - By <%= b.author %> (<%= b.availableCopies %> copies in stock) [<%= b.bookId %>]
+                  </option>
+                <% }); %>
+              </select>
+              <small class="text-muted">If out of stock, your request will be queued for the next available return.</small>
+            </div>
+
+            <!-- Renewal Field (Select from User's active loans) -->
+            <div id="renewalFields" class="mb-4" style="display: none;">
+              <label for="circulationSelect" class="form-label fw-semibold">Select Your Borrowed Book to Renew <span class="text-danger">*</span></label>
+              <% if (activeLoans.length === 0) { %>
+                <div class="alert alert-warning py-2 small mb-0">
+                  <i class="bi bi-exclamation-triangle me-1"></i> You do not currently have any active books to renew.
+                </div>
+              <% } else { %>
+                <select class="form-select" id="circulationSelect" name="circulationId">
+                  <option value="">-- Choose Active Loan --</option>
+                  <% activeLoans.forEach(function(l) { %>
+                    <option value="<%= l._id %>" <%= selectedCirculationId && selectedCirculationId.toString() === l._id.toString() ? 'selected' : '' %>>
+                      <%= l.bookId ? l.bookId.title : 'Book' %> (Due: <%= new Date(l.dueDate).toLocaleDateString() %>) [<%= l.circulationId %>]
+                    </option>
+                  <% }); %>
+                </select>
+              <% } %>
+              <small class="text-muted">Renewals grant an additional standard borrowing period (subject to approval).</small>
+            </div>
+
+            <!-- Suggestion Fields (New Book title and author) -->
+            <div id="suggestionFields" class="mb-4" style="display: none;">
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <label for="suggestedTitle" class="form-label fw-semibold">Recommended Book Title <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="suggestedTitle" name="suggestedTitle" placeholder="e.g. Designing Data-Intensive Applications">
+                </div>
+                <div class="col-md-5">
+                  <label for="suggestedAuthor" class="form-label fw-semibold">Author / Publisher</label>
+                  <input type="text" class="form-control" id="suggestedAuthor" name="suggestedAuthor" placeholder="e.g. Martin Kleppmann">
+                </div>
+              </div>
+            </div>
+
+            <!-- Details / Description / Complaint Notes -->
+            <div id="complaintFields" class="mb-4">
+              <label for="details" class="form-label fw-semibold">Request Details / Remarks <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="details" name="details" rows="4" placeholder="Explain your reason, book conditions, or any special considerations for library staff..." required></textarea>
+              <small class="text-muted">Clear details help library staff process your request promptly.</small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="/patron/my-requests" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                <i class="bi bi-send me-1"></i> Submit Request
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,97 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-primary-subtle text-primary fw-bold">ACCOUNT ADMINISTRATION (FR-001)</span>
+      <h3 class="fw-bold text-dark mb-0">User Accounts Management</h3>
+      <p class="text-muted small mb-0">Authorized patron accounts, staff accounts, and status controls</p>
+    </div>
+  </div>
+
+  <!-- Role Filter -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small fw-semibold text-muted me-2"><i class="bi bi-funnel me-1"></i>Filter Role:</span>
+        <a href="/staff/users" class="btn btn-sm <%= selectedRole === 'ALL' ? 'btn-primary' : 'btn-outline-secondary' %>">All Users</a>
+        <a href="/staff/users?role=PATRON" class="btn btn-sm <%= selectedRole === 'PATRON' ? 'btn-primary' : 'btn-outline-secondary' %>">Patrons (Students/Faculty)</a>
+        <a href="/staff/users?role=STAFF" class="btn btn-sm <%= selectedRole === 'STAFF' ? 'btn-warning text-dark' : 'btn-outline-secondary' %>">Library Staff</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4">User ID</th>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th>Department / Enrollment</th>
+              <th>Role</th>
+              <th>Account Status</th>
+              <th class="pe-4 text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(u) { %>
+              <tr>
+                <td class="ps-4">
+                  <span class="badge bg-light text-dark border code-font fs-8"><%= u.userId %></span>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark"><%= u.name %></div>
+                  <small class="text-muted"><%= u.phone || 'No phone' %></small>
+                </td>
+                <td>
+                  <small class="text-dark"><%= u.email %></small>
+                </td>
+                <td>
+                  <small class="text-dark"><%= u.department %></small>
+                  <% if (u.enrollmentNo) { %>
+                    <small class="text-muted d-block code-font"><%= u.enrollmentNo %></small>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="badge <%= u.role === 'STAFF' ? 'bg-warning text-dark' : 'bg-primary' %>">
+                    <%= u.role %>
+                  </span>
+                </td>
+                <td>
+                  <% if (u.accountStatus === 'ACTIVE') { %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                      <i class="bi bi-check-circle-fill me-1"></i>ACTIVE
+                    </span>
+                  <% } else { %>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                      <i class="bi bi-slash-circle me-1"></i>INACTIVE
+                    </span>
+                  <% } %>
+                </td>
+                <td class="pe-4 text-end">
+                  <% if (u._id.toString() !== user._id.toString()) { %>
+                    <form action="/staff/users/<%= u._id %>/toggle" method="POST" class="d-inline">
+                      <button type="submit" class="btn btn-sm <%= u.accountStatus === 'ACTIVE' ? 'btn-outline-danger' : 'btn-outline-success' %>">
+                        <%= u.accountStatus === 'ACTIVE' ? 'Deactivate' : 'Activate' %>
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="text-muted small fst-italic">Current Session</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

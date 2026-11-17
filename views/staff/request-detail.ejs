@@ -1,0 +1,148 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container py-4 flex-grow-1">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/staff/dashboard">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="/staff/requests">Service Requests</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= request.requestId %></li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Left Column: Request & Patron Details -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <span class="badge bg-secondary-subtle text-secondary code-font mb-2"><%= request.requestId %></span>
+              <h3 class="fw-bold text-dark mb-1"><%= request.type %> REQUEST</h3>
+              <small class="text-muted">Submitted on <%= new Date(request.submittedAt).toLocaleString() %></small>
+            </div>
+            <div>
+              <% if (request.status === 'PENDING') { %>
+                <span class="badge badge-pending px-3 py-2 fs-7"><i class="bi bi-hourglass-split me-1"></i>PENDING</span>
+              <% } else if (request.status === 'APPROVED') { %>
+                <span class="badge badge-approved px-3 py-2 fs-7"><i class="bi bi-check-circle me-1"></i>APPROVED</span>
+              <% } else if (request.status === 'RESOLVED') { %>
+                <span class="badge badge-resolved px-3 py-2 fs-7"><i class="bi bi-patch-check-fill me-1"></i>RESOLVED</span>
+              <% } else { %>
+                <span class="badge badge-rejected px-3 py-2 fs-7"><i class="bi bi-x-circle me-1"></i>REJECTED</span>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Requester Details -->
+          <div class="p-3 bg-light rounded-3 mb-4 border">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-circle me-1 text-primary"></i>Requester Information</h6>
+            <div class="row g-2 small">
+              <div class="col-sm-6"><strong>Name:</strong> <%= request.userId ? request.userId.name : 'Unknown' %></div>
+              <div class="col-sm-6"><strong>Patron ID:</strong> <code class="text-primary"><%= request.userId ? request.userId.userId : 'N/A' %></code></div>
+              <div class="col-sm-6"><strong>Email:</strong> <%= request.userId ? request.userId.email : 'N/A' %></div>
+              <div class="col-sm-6"><strong>Department:</strong> <%= request.userId ? request.userId.department : 'N/A' %></div>
+              <% if (request.userId && request.userId.enrollmentNo) { %>
+                <div class="col-sm-6"><strong>Enrollment No:</strong> <%= request.userId.enrollmentNo %></div>
+              <% } %>
+              <% if (request.userId && request.userId.phone) { %>
+                <div class="col-sm-6"><strong>Phone:</strong> <%= request.userId.phone %></div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Subject Book Details -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-book me-1 text-primary"></i>Target Information</h6>
+            <% if (request.type === 'SUGGESTION') { %>
+              <div class="p-3 border rounded-3 bg-white">
+                <div class="fw-bold fs-6 text-primary"><%= request.suggestedTitle %></div>
+                <div class="text-muted small">Suggested Author: <%= request.suggestedAuthor || 'Not specified' %></div>
+              </div>
+            <% } else if (request.bookId) { %>
+              <div class="p-3 border rounded-3 bg-white">
+                <div class="fw-bold fs-6 text-dark"><%= request.bookId.title %></div>
+                <div class="text-muted small">By <%= request.bookId.author %> &bull; Category: <%= request.bookId.category %></div>
+                <div class="small mt-1">Available Copies: <strong class="text-<%= request.bookId.availableCopies > 0 ? 'success' : 'danger' %>"><%= request.bookId.availableCopies %></strong> / <%= request.bookId.totalCopies %></div>
+              </div>
+            <% } else if (request.circulationId && request.circulationId.bookId) { %>
+              <div class="p-3 border rounded-3 bg-white">
+                <div class="fw-bold fs-6 text-dark"><%= request.circulationId.bookId.title %></div>
+                <div class="text-muted small">Active Circulation ID: <code class="text-primary"><%= request.circulationId.circulationId %></code></div>
+                <div class="small mt-1 text-danger">Current Due Date: <%= new Date(request.circulationId.dueDate).toLocaleDateString() %></div>
+              </div>
+            <% } else { %>
+              <div class="text-muted small">General Library Service Request</div>
+            <% } %>
+          </div>
+
+          <!-- Patron Request Description -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-dark mb-1">Patron's Details / Reason:</h6>
+            <div class="p-3 bg-white border rounded-3 text-dark small" style="white-space: pre-line;">
+              <%= request.details %>
+            </div>
+          </div>
+
+          <!-- Current Staff Remarks if any -->
+          <% if (request.staffRemarks) { %>
+            <div class="p-3 bg-info-subtle border border-info-subtle rounded-3 small">
+              <strong class="text-info-emphasis d-block mb-1"><i class="bi bi-chat-quote me-1"></i>Previous Staff Remarks:</strong>
+              <%= request.staffRemarks %>
+              <% if (request.resolvedAt) { %>
+                <div class="text-muted fs-8 mt-1">Resolved on: <%= new Date(request.resolvedAt).toLocaleString() %></div>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Staff Decision & Action Form (Activity Diagram 3.9) -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <h5 class="fw-bold text-dark mb-2"><i class="bi bi-sliders2 me-2 text-primary"></i>Staff Decision & Action</h5>
+          <p class="text-muted small mb-4">
+            Take administrative action according to library policy. The patron will be automatically notified upon status update.
+          </p>
+
+          <form action="/staff/requests/<%= request._id %>/status" method="POST">
+            <div class="mb-3">
+              <label for="staffRemarks" class="form-label fw-semibold">Staff Remarks / Reason <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="staffRemarks" name="staffRemarks" rows="4" placeholder="Enter reason, approval notes, or instructions for the patron..." required><%= request.staffRemarks %></textarea>
+              <small class="text-muted">This message is delivered directly in the patron's notification inbox.</small>
+            </div>
+
+            <!-- Action buttons depending on state -->
+            <div class="d-grid gap-2 pt-2">
+              <button type="submit" name="action" value="APPROVE" class="btn btn-success fw-semibold shadow-sm py-2">
+                <i class="bi bi-check-circle me-1"></i> Approve Request
+                <% if (request.type === 'RENEWAL') { %>
+                  <small class="d-block text-white-50 fw-normal fs-8">Extends due date by standard loan period</small>
+                <% } %>
+              </button>
+
+              <button type="submit" name="action" value="RESOLVE" class="btn btn-primary fw-semibold py-2">
+                <i class="bi bi-patch-check me-1"></i> Mark as Resolved / Fulfilled
+              </button>
+
+              <button type="submit" name="action" value="REJECT" class="btn btn-outline-danger fw-semibold py-2">
+                <i class="bi bi-x-circle me-1"></i> Reject Request
+              </button>
+            </div>
+          </form>
+
+          <div class="mt-4 pt-3 border-top">
+            <a href="/staff/requests" class="btn btn-outline-secondary btn-sm w-100">
+              <i class="bi bi-arrow-left me-1"></i> Back to Requests List
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

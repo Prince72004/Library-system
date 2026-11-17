@@ -1,0 +1,222 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <!-- Patron Welcome Card -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-primary-subtle text-primary fw-bold mb-1">PATRON PORTAL</span>
+          <h3 class="fw-bold text-dark mb-0">Welcome, <%= user.name %>!</h3>
+          <p class="text-muted small mb-0 mt-1">
+            Department: <span class="fw-semibold text-dark"><%= user.department %></span> &bull; 
+            ID: <code class="text-primary"><%= user.userId %></code>
+            <% if (user.enrollmentNo) { %> &bull; Enrollment: <code class="text-primary"><%= user.enrollmentNo %></code><% } %>
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/catalog" class="btn btn-outline-primary btn-sm fw-semibold">
+            <i class="bi bi-search me-1"></i> Browse Catalog
+          </a>
+          <a href="/patron/request-submit" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> New Service Request
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <!-- Active Loans -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-primary h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-semibold">CURRENTLY BORROWED</span>
+              <h3 class="fw-bold text-dark my-1"><%= activeLoansCount %> <span class="fs-6 text-muted fw-normal">/ <%= maxBooksAllowed %></span></h3>
+              <a href="/patron/my-books" class="small text-decoration-none fw-semibold">View my loans <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi bi-book fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overdue Books -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-semibold">OVERDUE BOOKS</span>
+              <h3 class="fw-bold text-danger my-1"><%= overdueCount %></h3>
+              <span class="small text-muted"><%= overdueCount > 0 ? 'Action required immediately' : 'All loans in good standing' %></span>
+            </div>
+            <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle">
+              <i class="bi bi-alarm fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-warning h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-semibold">PENDING REQUESTS</span>
+              <h3 class="fw-bold text-warning my-1"><%= pendingRequestsCount %></h3>
+              <a href="/patron/my-requests" class="small text-decoration-none fw-semibold">Track requests <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle">
+              <i class="bi bi-hourglass-split fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Fines -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-info h-100">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small fw-semibold">OUTSTANDING FINES</span>
+              <h3 class="fw-bold text-dark my-1">₹ <%= totalPendingFineAmount + estimatedCurrentFine %></h3>
+              <a href="/patron/my-fines" class="small text-decoration-none fw-semibold">Fine details <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle">
+              <i class="bi bi-cash-coin fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Active Borrowed Books Table -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-journal-check me-2 text-primary"></i>Currently Borrowed Books</h5>
+          <a href="/patron/my-books" class="btn btn-outline-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body px-4">
+          <% if (activeLoans.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+              You have no active book loans.
+              <div class="mt-2">
+                <a href="/catalog" class="btn btn-sm btn-primary">Find a Book in Catalog</a>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table align-middle table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Book Details</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% activeLoans.forEach(function(circ) { %>
+                    <% const isOverdue = new Date() > new Date(circ.dueDate); %>
+                    <tr>
+                      <td>
+                        <div class="fw-semibold text-dark"><%= circ.bookId ? circ.bookId.title : 'Book Title' %></div>
+                        <small class="text-muted">By <%= circ.bookId ? circ.bookId.author : 'Unknown' %></small>
+                      </td>
+                      <td>
+                        <div class="small fw-semibold <%= isOverdue ? 'text-danger' : 'text-dark' %>">
+                          <%= new Date(circ.dueDate).toLocaleDateString() %>
+                        </div>
+                        <% if (isOverdue) { %>
+                          <span class="badge bg-danger fs-8">Overdue!</span>
+                        <% } else { %>
+                          <span class="badge bg-light text-muted border fs-8">Active</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary-subtle text-secondary code-font fs-8"><%= circ.circulationId %></span>
+                      </td>
+                      <td class="text-end">
+                        <a href="/patron/request-submit?type=RENEWAL&circulationId=<%= circ._id %>" class="btn btn-outline-warning btn-sm" title="Request Renewal">
+                          <i class="bi bi-arrow-repeat"></i> Renew
+                        </a>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Service Requests & Quick Actions -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-card-checklist me-2 text-primary"></i>My Recent Requests</h5>
+          <a href="/patron/my-requests" class="btn btn-outline-secondary btn-sm">All Requests</a>
+        </div>
+        <div class="card-body px-4">
+          <% if (recentRequests.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No service requests submitted yet.
+              <div class="mt-2">
+                <a href="/patron/request-submit" class="btn btn-sm btn-outline-primary">Submit a Request</a>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="list-group list-group-flush">
+              <% recentRequests.forEach(function(reqItem) { %>
+                <div class="list-group-item px-0 py-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div>
+                      <span class="badge bg-light text-dark border code-font fs-8"><%= reqItem.requestId %></span>
+                      <strong class="ms-1 small text-dark"><%= reqItem.type %></strong>
+                    </div>
+                    <% if (reqItem.status === 'PENDING') { %>
+                      <span class="badge badge-pending">PENDING</span>
+                    <% } else if (reqItem.status === 'APPROVED') { %>
+                      <span class="badge badge-approved">APPROVED</span>
+                    <% } else if (reqItem.status === 'RESOLVED') { %>
+                      <span class="badge badge-resolved">RESOLVED</span>
+                    <% } else { %>
+                      <span class="badge badge-rejected">REJECTED</span>
+                    <% } %>
+                  </div>
+                  <div class="small text-truncate-2 text-muted">
+                    <%= reqItem.bookId ? reqItem.bookId.title : (reqItem.suggestedTitle || reqItem.details) %>
+                  </div>
+                  <% if (reqItem.staffRemarks) { %>
+                    <div class="small text-info mt-1"><i class="bi bi-chat-left-quote me-1"></i>Staff: <%= reqItem.staffRemarks %></div>
+                  <% } %>
+                  <div class="text-muted fs-8 mt-1">Submitted on <%= new Date(reqItem.submittedAt).toLocaleDateString() %></div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

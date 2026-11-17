@@ -1,0 +1,186 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-primary text-white fw-bold">REPORTING MODULE (FR-010)</span>
+      <h3 class="fw-bold text-dark mb-0">Library Operational Reports & Analytics</h3>
+      <p class="text-muted small mb-0">Comprehensive reports for circulation monitoring, overdue audits, fine collection, and request tracking</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-secondary btn-sm no-print">
+        <i class="bi bi-printer me-1"></i> Print Summary
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Navigation Cards -->
+  <div class="row g-4 mb-4">
+    <!-- Report 1: Issued Books -->
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-4 text-decoration-none text-dark">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3">
+              <i class="bi bi-journal-check fs-3"></i>
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-bold">Active: <%= totalIssuedActive %></span>
+          </div>
+          <h5 class="fw-bold mb-1">Issued Books Report</h5>
+          <p class="text-muted small mb-3">Full inventory of books currently in circulation with patron details and due dates.</p>
+          <div class="mt-auto pt-3 border-top d-flex gap-2">
+            <a href="/reports/circulation" class="btn btn-primary btn-sm flex-grow-1 fw-semibold">View Report</a>
+            <a href="/reports/circulation?format=csv" class="btn btn-outline-secondary btn-sm" title="Download CSV"><i class="bi bi-download"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 2: Overdue Books -->
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-4 text-decoration-none text-dark">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3">
+              <i class="bi bi-alarm fs-3"></i>
+            </div>
+            <span class="badge bg-danger text-white fw-bold">Overdue: <%= totalOverdueActive %></span>
+          </div>
+          <h5 class="fw-bold mb-1">Overdue Books Audit</h5>
+          <p class="text-muted small mb-3">Identifies overdue items, days late, calculated penalties, and borrower contacts.</p>
+          <div class="mt-auto pt-3 border-top d-flex gap-2">
+            <a href="/reports/overdue" class="btn btn-danger btn-sm flex-grow-1 fw-semibold">View Report</a>
+            <a href="/reports/overdue?format=csv" class="btn btn-outline-secondary btn-sm" title="Download CSV"><i class="bi bi-download"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 3: Fine Collections -->
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-4 text-decoration-none text-dark">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
+              <i class="bi bi-cash-coin fs-3"></i>
+            </div>
+            <span class="badge bg-success-subtle text-success fw-bold">Financial</span>
+          </div>
+          <h5 class="fw-bold mb-1">Fine Collections</h5>
+          <p class="text-muted small mb-3">Financial ledger of collected, pending, and waived overdue penalties.</p>
+          <div class="mt-auto pt-3 border-top d-flex gap-2">
+            <a href="/reports/fines" class="btn btn-success btn-sm flex-grow-1 fw-semibold">View Report</a>
+            <a href="/reports/fines?format=csv" class="btn btn-outline-secondary btn-sm" title="Download CSV"><i class="bi bi-download"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 4: Service Request Stats -->
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-4 text-decoration-none text-dark">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
+              <i class="bi bi-pie-chart fs-3"></i>
+            </div>
+            <span class="badge bg-warning text-dark fw-bold">Statistics</span>
+          </div>
+          <h5 class="fw-bold mb-1">Request Statistics</h5>
+          <p class="text-muted small mb-3">Breakdown of reservation, renewal, complaint, and suggestion fulfillment rates.</p>
+          <div class="mt-auto pt-3 border-top d-flex gap-2">
+            <a href="/reports/requests" class="btn btn-warning text-dark btn-sm flex-grow-1 fw-semibold">View Report</a>
+            <a href="/reports/requests?format=csv" class="btn btn-outline-secondary btn-sm" title="Download CSV"><i class="bi bi-download"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytical Summary Charts -->
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+          <h5 class="fw-bold text-dark mb-0">Fine Collections Breakdown (Rs)</h5>
+          <small class="text-muted">Settlement distribution across Paid, Pending, and Waived fines</small>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div style="height: 250px;">
+            <canvas id="finesReportChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+          <h5 class="fw-bold text-dark mb-0">Service Requests by Workflow Status</h5>
+          <small class="text-muted">Lifecycle stages (Pending, Approved, Resolved, Rejected)</small>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div style="height: 250px;">
+            <canvas id="requestStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const finesData = <%- totalFinesAgg %>;
+    const requestStatusData = <%- requestsByStatusAgg %>;
+
+    // Fines Chart
+    const fCtx = document.getElementById('finesReportChart');
+    if (fCtx) {
+      new Chart(fCtx, {
+        type: 'pie',
+        data: {
+          labels: finesData.map(f => f._id),
+          datasets: [{
+            data: finesData.map(f => f.total),
+            backgroundColor: ['#dc3545', '#198754', '#6c757d']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // Status Chart
+    const sCtx = document.getElementById('requestStatusChart');
+    if (sCtx) {
+      new Chart(sCtx, {
+        type: 'bar',
+        data: {
+          labels: requestStatusData.map(s => s._id),
+          datasets: [{
+            label: 'Total Requests',
+            data: requestStatusData.map(s => s.count),
+            backgroundColor: '#0d6efd',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

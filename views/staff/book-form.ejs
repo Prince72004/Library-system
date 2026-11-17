@@ -1,0 +1,132 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container py-4 flex-grow-1">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
+              <i class="bi <%= isEdit ? 'bi-pencil-square' : 'bi-journal-plus' %> fs-2"></i>
+            </div>
+            <div>
+              <span class="badge bg-primary-subtle text-primary fw-bold"><%= isEdit ? 'UPDATE CATALOG' : 'NEW INVENTORY ENTRY' %></span>
+              <h3 class="fw-bold text-dark mb-0"><%= isEdit ? 'Edit Book Information' : 'Add New Book to Catalog' %></h3>
+              <p class="text-muted small mb-0"><%= isEdit ? 'Update metadata, stock, or location for this catalog title' : 'Enter complete bibliographic and inventory details' %></p>
+            </div>
+          </div>
+
+          <form action="<%= isEdit ? '/staff/books/edit/' + book._id : '/staff/books/add' %>" method="POST">
+            <div class="row g-3">
+              <!-- Book Title -->
+              <div class="col-12">
+                <label for="title" class="form-label fw-semibold">Book Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-lg" id="title" name="title" value="<%= isEdit ? book.title : '' %>" placeholder="e.g. Introduction to Algorithms" required>
+              </div>
+
+              <!-- Author -->
+              <div class="col-md-7">
+                <label for="author" class="form-label fw-semibold">Author(s) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="author" name="author" value="<%= isEdit ? book.author : '' %>" placeholder="e.g. Thomas H. Cormen, Charles E. Leiserson" required>
+              </div>
+
+              <!-- Category -->
+              <div class="col-md-5">
+                <label for="category" class="form-label fw-semibold">Category / Subject</label>
+                <input type="text" class="form-control" id="category" name="category" value="<%= isEdit ? book.category : 'Computer Science' %>" placeholder="e.g. Data Structures, AI, Database">
+              </div>
+
+              <!-- ISBN -->
+              <div class="col-md-6">
+                <label for="isbn" class="form-label fw-semibold">ISBN</label>
+                <input type="text" class="form-control" id="isbn" name="isbn" value="<%= isEdit ? book.isbn : '' %>" placeholder="978-0262033848">
+              </div>
+
+              <!-- Publisher -->
+              <div class="col-md-6">
+                <label for="publisher" class="form-label fw-semibold">Publisher</label>
+                <input type="text" class="form-control" id="publisher" name="publisher" value="<%= isEdit ? book.publisher : '' %>" placeholder="MIT Press">
+              </div>
+
+              <!-- Edition -->
+              <div class="col-md-6">
+                <label for="edition" class="form-label fw-semibold">Edition</label>
+                <input type="text" class="form-control" id="edition" name="edition" value="<%= isEdit ? book.edition : '' %>" placeholder="3rd Edition">
+              </div>
+
+              <!-- Shelf Location -->
+              <div class="col-md-6">
+                <label for="shelfLocation" class="form-label fw-semibold">Shelf Location / Rack</label>
+                <input type="text" class="form-control" id="shelfLocation" name="shelfLocation" value="<%= isEdit ? book.shelfLocation : 'Stack CS-1' %>" placeholder="Rack A-1, Stack 3">
+              </div>
+
+              <!-- Copies / Stock -->
+              <% if (!isEdit) { %>
+                <div class="col-md-6">
+                  <label for="totalCopies" class="form-label fw-semibold">Total Copies to Add <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                    <input type="number" class="form-control" id="totalCopies" name="totalCopies" value="1" min="1" max="100" required>
+                  </div>
+                  <small class="text-muted">Unique accession barcodes (e.g. BK-xxxx-C01, C02...) are generated automatically.</small>
+                </div>
+              <% } else { %>
+                <div class="col-md-6">
+                  <label for="totalCopies" class="form-label fw-semibold">Total Stock Copies <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                    <input type="number" class="form-control fw-bold fs-5 text-primary" id="totalCopies" name="totalCopies" value="<%= book.totalCopies %>" min="1" max="500" required>
+                  </div>
+                  <small class="text-muted d-block mt-1">
+                    Increase or decrease total copies here. Increasing will automatically generate new physical barcodes (e.g. <%= book.bookId %>-C<%= String(book.totalCopies + 1).padStart(2, '0') %>).
+                  </small>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Current Physical Stock Status</label>
+                  <div class="card bg-light border p-2 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <span class="badge bg-success-subtle text-success fw-bold me-1">
+                          <i class="bi bi-check-circle me-1"></i><%= book.availableCopies %> Available
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary fw-bold">
+                          <i class="bi bi-person-check me-1"></i><%= book.totalCopies - book.availableCopies %> Issued
+                        </span>
+                      </div>
+                      <a href="/staff/books/<%= book._id %>/copies" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-upc-scan me-1"></i> Manage Barcodes
+                      </a>
+                    </div>
+                    <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">
+                      Availability updates automatically as physical copies are issued or returned.
+                    </small>
+                  </div>
+                </div>
+              <% } %>
+
+              <!-- Description -->
+              <div class="col-12">
+                <label for="description" class="form-label fw-semibold">Description / Synopsis</label>
+                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief summary of syllabus coverage, topics, or book contents..."><%= isEdit ? book.description : '' %></textarea>
+              </div>
+
+              <div class="col-12 d-flex justify-content-between align-items-center pt-3 border-top mt-4">
+                <a href="/staff/books" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                  <i class="bi <%= isEdit ? 'bi-check-lg' : 'bi-plus-lg' %> me-1"></i> <%= isEdit ? 'Save Changes' : 'Add to Catalog' %>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

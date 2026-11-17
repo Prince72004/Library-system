@@ -1,0 +1,129 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-success text-white fw-bold">FINANCIAL REPORT (FR-010)</span>
+      <h3 class="fw-bold text-dark mb-0">Fine Collections & Settlement Report</h3>
+      <p class="text-muted small mb-0">Financial audit of overdue penalties, revenue collected, and library waivers</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/reports/fines?format=csv&status=<%= selectedStatus %>" class="btn btn-outline-success btn-sm fw-semibold">
+        <i class="bi bi-file-earmark-excel me-1"></i> Export to CSV
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-secondary btn-sm no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+      </button>
+      <a href="/reports" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Reports Home
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-success">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">COLLECTED REVENUE</span>
+          <h3 class="fw-bold text-success my-1">₹ <%= totalPaid %></h3>
+          <small class="text-muted">Paid in full by patrons</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">OUTSTANDING UNCOLLECTED</span>
+          <h3 class="fw-bold text-danger my-1">₹ <%= totalPending %></h3>
+          <small class="text-muted">Awaiting student desk payment</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-info">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">WAIVED FINES</span>
+          <h3 class="fw-bold text-secondary my-1">₹ <%= totalWaived %></h3>
+          <small class="text-muted">Authorized administrative waivers</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fines Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (fines.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-shield-check fs-1 text-success mb-3 d-block"></i>
+          <h5 class="fw-bold">No Fine Records Found</h5>
+          <p class="text-muted">No fines match your query.</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Fine ID</th>
+                <th>Patron Details</th>
+                <th>Book Title</th>
+                <th>Penalty Reason</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Assessed Date</th>
+                <th class="pe-4">Settled Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% fines.forEach(function(f) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= f.fineId %></span>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark"><%= f.userId ? f.userId.name : 'Unknown' %></div>
+                    <small class="text-muted"><%= f.userId ? f.userId.email : '' %></small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark"><%= f.circulationId && f.circulationId.bookId ? f.circulationId.bookId.title : 'Book Reference' %></div>
+                    <small class="text-muted code-font"><%= f.circulationId ? f.circulationId.circulationId : '' %></small>
+                  </td>
+                  <td>
+                    <small class="text-dark"><%= f.reason %></small>
+                  </td>
+                  <td>
+                    <span class="fw-bold text-<%= f.status === 'PENDING' ? 'danger' : 'success' %>">₹ <%= f.amount %></span>
+                  </td>
+                  <td>
+                    <% if (f.status === 'PENDING') { %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">PENDING</span>
+                    <% } else if (f.status === 'PAID') { %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">PAID</span>
+                    <% } else { %>
+                      <span class="badge bg-secondary-subtle text-secondary border">WAIVED</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-muted"><%= new Date(f.createdAt).toLocaleDateString() %></small>
+                  </td>
+                  <td class="pe-4">
+                    <% if (f.paidAt) { %>
+                      <small class="text-success"><%= new Date(f.paidAt).toLocaleDateString() %></small>
+                    <% } else { %>
+                      <span class="text-muted small">-</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

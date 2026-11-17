@@ -1,0 +1,182 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-warning-subtle text-warning fw-bold">CIRCULATION RETURN & FINES (FR-003, FR-007)</span>
+      <h3 class="fw-bold text-dark mb-0">Return Book & Evaluate Fines</h3>
+      <p class="text-muted small mb-0">Record book returns, restock inventory, and calculate overdue penalties automatically</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/staff/circulation/issue" class="btn btn-success btn-sm fw-semibold">
+        <i class="bi bi-box-arrow-up-right me-1"></i> Issue Book
+      </a>
+      <a href="/staff/circulation" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-list-ul me-1"></i> All Circulations
+      </a>
+    </div>
+  </div>
+
+  <!-- Search Filter -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <form action="/staff/circulation/return" method="GET" class="row g-2 align-items-center">
+        <div class="col-md-9">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" name="search" value="<%= searchQuery %>" placeholder="Search by patron name, email, book title, or circulation ID...">
+          </div>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100 fw-semibold">
+            <i class="bi bi-search me-1"></i> Search Loans
+          </button>
+          <a href="/staff/circulation/return" class="btn btn-outline-secondary" title="Clear Search">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Loans Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (circulations.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-check2-circle fs-1 text-success mb-3 d-block"></i>
+          <h5 class="fw-bold">No Active Borrowed Books Found</h5>
+          <p class="text-muted">Either all books have been returned or no records matched your search query.</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Circulation ID</th>
+                <th>Patron Details</th>
+                <th>Book Title</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Calculated Fine (FR-007)</th>
+                <th class="pe-4 text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% circulations.forEach(function(circ) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= circ.circulationId %></span>
+                  </td>
+                  <td>
+                    <% if (circ.userId) { %>
+                      <div class="fw-semibold text-dark"><%= circ.userId.name %></div>
+                      <small class="text-muted"><%= circ.userId.email %> &bull; <code class="text-primary"><%= circ.userId.userId %></code></small>
+                    <% } else { %>
+                      <span class="text-muted">Unknown Patron</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (circ.bookId) { %>
+                      <div class="fw-semibold text-dark"><%= circ.bookId.title %></div>
+                      <small class="text-muted"><code class="text-secondary"><%= circ.bookId.bookId %></code> &bull; <%= circ.bookId.category %></small>
+                      <div class="mt-1">
+                        <span class="badge bg-dark text-white code-font fs-8"><i class="bi bi-upc-scan me-1"></i>Copy: <%= circ.copyCode || 'Standard' %></span>
+                      </div>
+                    <% } else { %>
+                      <span class="text-muted">Unknown Book</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-dark"><%= new Date(circ.issueDate).toLocaleDateString() %></small>
+                  </td>
+                  <td>
+                    <div class="small fw-semibold <%= circ.isOverdue ? 'text-danger' : 'text-dark' %>">
+                      <%= new Date(circ.dueDate).toLocaleDateString() %>
+                    </div>
+                    <% if (circ.isOverdue) { %>
+                      <span class="badge badge-overdue fs-8"><%= circ.daysOverdue %> Days Overdue</span>
+                    <% } else { %>
+                      <span class="badge bg-light text-muted border fs-8">Within due period</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (circ.calculatedFine > 0) { %>
+                      <div class="fw-bold text-danger">₹ <%= circ.calculatedFine %></div>
+                      <small class="text-muted fs-8">(₹ <%= config.fineRatePerDay %>/day)</small>
+                    <% } else { %>
+                      <span class="text-success small fw-semibold"><i class="bi bi-check-circle me-1"></i>No Fine</span>
+                    <% } %>
+                  </td>
+                  <td class="pe-4 text-end">
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-warning btn-sm fw-semibold shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#returnModal-<%= circ._id %>">
+                      <i class="bi bi-box-arrow-in-down-left me-1"></i> Process Return
+                    </button>
+
+                    <!-- Return Confirmation Modal -->
+                    <div class="modal fade" id="returnModal-<%= circ._id %>" tabindex="-1" aria-labelledby="modalLabel-<%= circ._id %>" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered text-start">
+                        <div class="modal-content rounded-4 border-0 shadow">
+                          <form action="/staff/circulation/return" method="POST">
+                            <input type="hidden" name="circulationId" value="<%= circ._id %>">
+                            <div class="modal-header border-0 pb-0">
+                              <h5 class="modal-title fw-bold" id="modalLabel-<%= circ._id %>">
+                                <i class="bi bi-box-arrow-in-down-left text-warning me-2"></i>Confirm Book Return
+                              </h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                              <div class="p-3 bg-light rounded-3 mb-3">
+                                <div><strong>Book:</strong> <%= circ.bookId ? circ.bookId.title : 'Book' %></div>
+                                <div><strong>Physical Copy ID:</strong> <span class="badge bg-dark text-white code-font"><%= circ.copyCode || 'Standard' %></span></div>
+                                <div><strong>Patron:</strong> <%= circ.userId ? circ.userId.name : 'Patron' %> (<%= circ.userId ? circ.userId.email : '' %>)</div>
+                                <div><strong>Due Date:</strong> <%= new Date(circ.dueDate).toLocaleDateString() %></div>
+                              </div>
+
+                              <% if (circ.isOverdue) { %>
+                                <div class="alert alert-danger py-2 mb-3">
+                                  <div class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Overdue Return Detected!</div>
+                                  <div class="small">Late by: <strong><%= circ.daysOverdue %> day(s)</strong> &bull; Overdue fine: <strong class="fs-6">₹ <%= circ.calculatedFine %></strong></div>
+                                </div>
+                                <div class="form-check mb-3">
+                                  <input class="form-check-input" type="checkbox" name="waiveFine" value="true" id="waiveCheck-<%= circ._id %>">
+                                  <label class="form-check-label small" for="waiveCheck-<%= circ._id %>">
+                                    Waive fine (mark fine status as WAIVED with library approval)
+                                  </label>
+                                </div>
+                              <% } else { %>
+                                <div class="alert alert-success py-2 mb-3 small">
+                                  <i class="bi bi-check-circle-fill me-1"></i> Book returned on time. Zero fine applicable.
+                                </div>
+                              <% } %>
+
+                              <div class="mb-3">
+                                <label for="remarks-<%= circ._id %>" class="form-label small fw-semibold">Return Remarks / Condition</label>
+                                <input type="text" class="form-control form-control-sm" id="remarks-<%= circ._id %>" name="remarks" placeholder="Good condition, normal wear, etc.">
+                              </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-warning btn-sm fw-semibold text-dark">
+                                <i class="bi bi-check-lg me-1"></i> Finalize Return
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

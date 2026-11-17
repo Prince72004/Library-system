@@ -1,0 +1,104 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container py-4 flex-grow-1">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
+              <i class="bi bi-box-arrow-up-right fs-2"></i>
+            </div>
+            <div>
+              <span class="badge bg-success-subtle text-success fw-bold">CIRCULATION ISSUE (FR-003)</span>
+              <h3 class="fw-bold text-dark mb-0">Issue Book to Patron</h3>
+              <p class="text-muted small mb-0">Record book checkout, enforce borrowing rules, and set due date</p>
+            </div>
+          </div>
+
+          <form action="/staff/circulation/issue" method="POST">
+            <!-- Patron Selection -->
+            <div class="mb-4">
+              <label for="patronEmailOrId" class="form-label fw-bold">Select or Search Patron <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                <input list="patronsList" class="form-control form-control-lg" id="patronEmailOrId" name="patronEmailOrId" placeholder="Type name, email, or patron ID..." value="<%= selectedPatron ? selectedPatron.email : '' %>" required autofocus>
+              </div>
+              <datalist id="patronsList">
+                <% patrons.forEach(function(p) { %>
+                  <option value="<%= p.email %>"><%= p.name %> (<%= p.userId %> - <%= p.department %>)</option>
+                <% }); %>
+              </datalist>
+              <small class="text-muted">You can enter patron email, User ID, or enrollment number.</small>
+            </div>
+
+            <!-- Book & Specific Physical Copy Selection -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-7">
+                <label for="bookTitleOrId" class="form-label fw-bold">Select Book Title / Catalog ID <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                  <input list="booksList" class="form-control" id="bookTitleOrId" name="bookTitleOrId" placeholder="Type book title or Book ID..." value="<%= selectedBook ? selectedBook.bookId : '' %>" required>
+                </div>
+                <datalist id="booksList">
+                  <% availableBooks.forEach(function(b) { %>
+                    <option value="<%= b.bookId %>"><%= b.title %> (By <%= b.author %> - <%= b.availableCopies %> copies)</option>
+                  <% }); %>
+                </datalist>
+                <small class="text-muted">Titles with available copies.</small>
+              </div>
+
+              <div class="col-md-5">
+                <label for="specificCopyId" class="form-label fw-bold">Specific Copy ID <span class="badge bg-primary">Unique Copy</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-upc-scan"></i></span>
+                  <input list="copiesList" class="form-control text-uppercase" id="specificCopyId" name="specificCopyId" placeholder="e.g. BK-1001-C01" value="<%= selectedCopy ? selectedCopy.copyId : '' %>">
+                </div>
+                <datalist id="copiesList">
+                  <% if (typeof availableCopies !== 'undefined') { %>
+                    <% availableCopies.forEach(function(c) { %>
+                      <option value="<%= c.copyId %>"><%= c.bookId ? c.bookId.title : '' %> (Copy #<%= c.copyNumber %> - <%= c.shelfLocation %>)</option>
+                    <% }); %>
+                  <% } %>
+                </datalist>
+                <small class="text-muted">Assigns this exact physical copy to the patron.</small>
+              </div>
+            </div>
+
+            <!-- Borrowing Rule Config Info -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="customDueDays" class="form-label fw-semibold">Loan Period (Days)</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="customDueDays" name="customDueDays" value="<%= config.loanPeriodDays %>" min="1" max="90">
+                  <span class="input-group-text bg-light">Days</span>
+                </div>
+                <small class="text-muted">System default: <%= config.loanPeriodDays %> days.</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Borrowing Limit Rule</label>
+                <div class="form-control bg-light text-muted">
+                  Max <%= config.maxBooksPerPatron %> books per patron
+                </div>
+                <small class="text-muted">System rejects issue if patron reached limit.</small>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="/staff/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+              </a>
+              <button type="submit" class="btn btn-success px-4 py-2 fw-semibold shadow-sm">
+                <i class="bi bi-check2-circle me-1"></i> Confirm & Issue Book
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

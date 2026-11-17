@@ -1,0 +1,280 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/staff/dashboard">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="/staff/books">Book Inventory</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Copies of <%= book.title %></li>
+    </ol>
+  </nav>
+
+  <!-- Title Card -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-primary-subtle text-primary fw-bold mb-1">PHYSICAL INVENTORY ACCESSION</span>
+          <h3 class="fw-bold text-dark mb-1"><%= book.title %></h3>
+          <p class="text-muted small mb-0">
+            Author: <strong class="text-dark"><%= book.author %></strong> &bull;
+            Category: <strong class="text-dark"><%= book.category %></strong> &bull;
+            Catalog ID: <code class="text-primary"><%= book.bookId %></code>
+            <% if (book.isbn) { %> &bull; ISBN: <code class="text-secondary"><%= book.isbn %></code><% } %>
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCopyModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Physical Copy
+          </button>
+          <a href="/staff/books" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Inventory
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Counters -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-primary">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">TOTAL COPIES IN REGISTRY</span>
+          <h3 class="fw-bold text-dark my-1"><%= copies.length %> Copies</h3>
+          <small class="text-muted">Registered accession copies</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-success">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">AVAILABLE ON SHELF</span>
+          <h3 class="fw-bold text-success my-1"><%= copies.filter(c => c.status === 'AVAILABLE').length %> Copies</h3>
+          <small class="text-muted">Ready to issue immediately</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-info">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">CURRENTLY ISSUED OUT</span>
+          <h3 class="fw-bold text-primary my-1"><%= copies.filter(c => c.status === 'ISSUED').length %> Copies</h3>
+          <small class="text-muted">Checked out by students/faculty</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copies Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (copies.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
+          <h5 class="fw-bold">No Physical Copies Found</h5>
+          <p class="text-muted">Click "Add Physical Copy" above to register copies for this title.</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Unique Copy ID</th>
+                <th>Copy #</th>
+                <th>Shelf / Location</th>
+                <th>Status</th>
+                <th>Current Holder / Loan Status</th>
+                <th>Condition</th>
+                <th class="pe-4 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% copies.forEach(function(copy) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-dark text-white code-font fs-7 px-2 py-1">
+                      <i class="bi bi-upc-scan me-1"></i><%= copy.copyId %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="fw-semibold text-dark">Copy #<%= copy.copyNumber %></span>
+                  </td>
+                  <td>
+                    <small class="text-dark"><i class="bi bi-geo-alt text-primary me-1"></i><%= copy.shelfLocation || book.shelfLocation || 'Main Stack' %></small>
+                  </td>
+                  <td>
+                    <% if (copy.status === 'AVAILABLE') { %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">
+                        <i class="bi bi-check-circle-fill me-1"></i>AVAILABLE
+                      </span>
+                    <% } else if (copy.status === 'ISSUED') { %>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                        <i class="bi bi-person-check-fill me-1"></i>ISSUED
+                      </span>
+                    <% } else if (copy.status === 'DAMAGED') { %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>DAMAGED
+                      </span>
+                    <% } else if (copy.status === 'LOST') { %>
+                      <span class="badge bg-dark text-white">
+                        <i class="bi bi-question-circle-fill me-1"></i>LOST
+                      </span>
+                    <% } else { %>
+                      <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                        <%= copy.status %>
+                      </span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (copy.status === 'ISSUED' && copy.currentCirculationId && copy.currentCirculationId.userId) { %>
+                      <div class="fw-semibold text-dark"><%= copy.currentCirculationId.userId.name %></div>
+                      <small class="text-muted">
+                        Due: <strong class="text-danger"><%= new Date(copy.currentCirculationId.dueDate).toLocaleDateString() %></strong>
+                        &bull; ID: <code><%= copy.currentCirculationId.userId.userId %></code>
+                      </small>
+                    <% } else if (copy.status === 'AVAILABLE') { %>
+                      <span class="text-muted small"><i class="bi bi-bookshelf me-1"></i>Available in library</span>
+                    <% } else { %>
+                      <span class="text-muted small">Not in circulation</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-muted"><%= copy.conditionNotes || 'Good' %></small>
+                  </td>
+                  <td class="pe-4 text-end">
+                    <div class="btn-group btn-group-sm">
+                      <% if (copy.status === 'AVAILABLE') { %>
+                        <a href="/staff/circulation/issue?copyId=<%= copy.copyId %>" class="btn btn-outline-success" title="Issue this specific copy">
+                          <i class="bi bi-box-arrow-up-right me-1"></i> Issue
+                        </a>
+                      <% } %>
+                      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editCopyModal-<%= copy._id %>" title="Update Condition / Status">
+                        <i class="bi bi-sliders"></i>
+                      </button>
+                      <% if (copy.status !== 'ISSUED') { %>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delCopyModal-<%= copy._id %>" title="Delete Copy">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      <% } %>
+                    </div>
+
+                    <!-- Modal to edit copy status -->
+                    <div class="modal fade" id="editCopyModal-<%= copy._id %>" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered text-start">
+                        <div class="modal-content rounded-4 border-0 shadow">
+                          <form action="/staff/books/copies/<%= copy._id %>/status" method="POST">
+                            <div class="modal-header border-0 pb-0">
+                              <h5 class="modal-title fw-bold">
+                                <i class="bi bi-sliders text-primary me-2"></i>Update Copy <%= copy.copyId %>
+                              </h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Physical Status</label>
+                                <select class="form-select form-select-sm" name="status" required>
+                                  <option value="AVAILABLE" <%= copy.status === 'AVAILABLE' ? 'selected' : '' %>>AVAILABLE (Ready to borrow)</option>
+                                  <option value="ISSUED" <%= copy.status === 'ISSUED' ? 'selected' : '' %>>ISSUED (Checked out)</option>
+                                  <option value="MAINTENANCE" <%= copy.status === 'MAINTENANCE' ? 'selected' : '' %>>MAINTENANCE (Binding / Repair)</option>
+                                  <option value="DAMAGED" <%= copy.status === 'DAMAGED' ? 'selected' : '' %>>DAMAGED (Damaged pages)</option>
+                                  <option value="LOST" <%= copy.status === 'LOST' ? 'selected' : '' %>>LOST (Reported lost)</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Shelf Location</label>
+                                <input type="text" class="form-control form-control-sm" name="shelfLocation" value="<%= copy.shelfLocation %>">
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Condition Notes</label>
+                                <input type="text" class="form-control form-control-sm" name="conditionNotes" value="<%= copy.conditionNotes %>" placeholder="e.g. Loose binding, pristine, etc.">
+                              </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-primary btn-sm fw-semibold">Save Changes</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <% if (copy.status !== 'ISSUED') { %>
+                      <!-- Delete Copy Modal -->
+                      <div class="modal fade" id="delCopyModal-<%= copy._id %>" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered text-start">
+                          <div class="modal-content rounded-4 border-0 shadow">
+                            <form action="/staff/books/copies/<%= copy._id %>/delete" method="POST">
+                              <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title fw-bold text-danger">
+                                  <i class="bi bi-trash text-danger me-2"></i>Remove Copy <%= copy.copyId %>?
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body py-3">
+                                Are you sure you want to remove copy <strong><%= copy.copyId %></strong> from the inventory? This will reduce total copies of this book by 1.
+                              </div>
+                              <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger btn-sm fw-semibold">Remove Copy</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Physical Copy -->
+<div class="modal fade" id="addCopyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <form action="/staff/books/<%= book._id %>/copies/add" method="POST">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-plus-circle text-primary me-2"></i>Add Physical Copies
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3">
+          <div class="p-3 bg-light rounded-3 mb-3">
+            <strong>Book:</strong> <%= book.title %><br>
+            <small class="text-muted">Total copies currently in registry: <strong><%= copies.length %></strong></small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Number of Copies to Add</label>
+            <input type="number" class="form-control form-control-sm fw-bold" name="numberOfCopies" value="1" min="1" max="50" required>
+            <small class="text-muted">You can add multiple copies at once (e.g. 5). The system will automatically generate sequential IDs.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Custom Copy ID / Barcode (Optional, only for 1 copy)</label>
+            <input type="text" class="form-control form-control-sm text-uppercase" name="customCopyId" placeholder="Leave empty for auto-generated (e.g. <%= book.bookId %>-C<%= String(copies.length + 1).padStart(2, '0') %>)">
+            <small class="text-muted">If blank, system assigns the next sequence number automatically.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Shelf Location</label>
+            <input type="text" class="form-control form-control-sm" name="shelfLocation" value="<%= book.shelfLocation || 'Main Stack' %>">
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-semibold">Add Copies</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

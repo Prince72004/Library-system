@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: library-management-system
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MAX_BOOKS_PER_PATRON
+        value: "3"
+      - key: LOAN_PERIOD_DAYS
+        value: "14"
+      - key: FINE_RATE_PER_DAY
+        value: "5"
+      - key: MONGODB_URI
+        sync: false

@@ -1,0 +1,118 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">My Borrowed Books & Loan History</h3>
+      <p class="text-muted small mb-0">Track due dates, loan periods, renewals, and returned books</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/catalog" class="btn btn-outline-primary btn-sm fw-semibold">
+        <i class="bi bi-search me-1"></i> Browse Catalog
+      </a>
+      <a href="/patron/request-submit?type=RENEWAL" class="btn btn-warning btn-sm fw-semibold">
+        <i class="bi bi-arrow-repeat me-1"></i> Request Renewal
+      </a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (circulations.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
+          <h5 class="fw-bold">No Circulation History</h5>
+          <p class="text-muted">You have not borrowed any books from the library yet.</p>
+          <a href="/catalog" class="btn btn-primary btn-sm mt-2">Explore Book Catalog</a>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Circulation ID</th>
+                <th>Book Information</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+                <th>Fine (Rs)</th>
+                <th class="pe-4 text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% circulations.forEach(function(item) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= item.circulationId %></span>
+                  </td>
+                  <td>
+                    <% if (item.bookId) { %>
+                      <div class="fw-semibold text-dark"><%= item.bookId.title %></div>
+                      <small class="text-muted"><i class="bi bi-person me-1"></i><%= item.bookId.author %> &bull; <span class="badge bg-secondary-subtle text-secondary"><%= item.bookId.category %></span></small>
+                      <div class="mt-1">
+                        <span class="badge bg-dark text-white code-font fs-8"><i class="bi bi-upc-scan me-1"></i>Assigned Copy: <%= item.copyCode || 'Standard' %></span>
+                      </div>
+                    <% } else { %>
+                      <span class="text-muted">Book details unavailable</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-dark"><%= new Date(item.issueDate).toLocaleDateString() %></small>
+                  </td>
+                  <td>
+                    <div class="small fw-semibold <%= item.isOverdueNow ? 'text-danger' : 'text-dark' %>">
+                      <%= new Date(item.dueDate).toLocaleDateString() %>
+                    </div>
+                    <% if (item.isOverdueNow) { %>
+                      <span class="badge badge-overdue fs-8"><%= item.daysOverdue %> days late</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (item.returnDate) { %>
+                      <small class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i><%= new Date(item.returnDate).toLocaleDateString() %></small>
+                    <% } else { %>
+                      <span class="badge bg-light text-muted border fs-8">Not Returned</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (item.status === 'RETURNED') { %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">RETURNED</span>
+                    <% } else if (item.isOverdueNow) { %>
+                      <span class="badge bg-danger">OVERDUE</span>
+                    <% } else { %>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle">ISSUED</span>
+                    <% } %>
+                    <% if (item.renewalCount > 0) { %>
+                      <span class="badge bg-info text-dark fs-8 d-block mt-1">Renewed <%= item.renewalCount %>x</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (item.currentFine > 0) { %>
+                      <span class="fw-bold text-danger">₹ <%= item.currentFine %></span>
+                    <% } else { %>
+                      <span class="text-muted small">₹ 0</span>
+                    <% } %>
+                  </td>
+                  <td class="pe-4 text-end">
+                    <% if (!item.returnDate) { %>
+                      <a href="/patron/request-submit?type=RENEWAL&circulationId=<%= item._id %>" class="btn btn-outline-warning btn-sm" title="Submit Renewal Request">
+                        <i class="bi bi-arrow-repeat"></i> Renew
+                      </a>
+                    <% } else { %>
+                      <span class="text-muted small"><i class="bi bi-check2-all text-success"></i> Completed</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

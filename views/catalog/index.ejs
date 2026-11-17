@@ -1,0 +1,185 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <!-- Hero / Banner -->
+  <div class="card bg-primary text-white border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+    <div class="card-body p-4 p-lg-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-white text-primary mb-2 px-3 py-1 fw-bold">ONLINE CATALOG (FR-002)</span>
+          <h1 class="display-6 fw-bold mb-2">Explore the Library Collection</h1>
+          <p class="lead mb-0 text-white-50 fs-6">
+            Search across textbooks, reference manuals, research publications, and journals. Check real-time stock availability and place reservation requests.
+          </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+          <% if (user && user.role === 'STAFF') { %>
+            <a href="/staff/books/add" class="btn btn-light fw-semibold shadow-sm">
+              <i class="bi bi-plus-lg me-1"></i> Add New Book
+            </a>
+          <% } else if (user && user.role === 'PATRON') { %>
+            <a href="/patron/request-submit?type=SUGGESTION" class="btn btn-outline-light fw-semibold">
+              <i class="bi bi-lightbulb me-1"></i> Suggest New Title
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card border-0 shadow-sm mb-4 rounded-4">
+    <div class="card-body p-3 p-lg-4">
+      <form action="/catalog" method="GET" class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label for="search" class="form-label fw-semibold small text-muted">Search Catalog</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-start-0" id="search" name="search" value="<%= searchQuery %>" placeholder="Title, author, category, or ISBN...">
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <label for="category" class="form-label fw-semibold small text-muted">Category</label>
+          <select class="form-select" id="category" name="category">
+            <option value="All" <%= selectedCategory === 'All' ? 'selected' : '' %>>All Categories</option>
+            <% categories.forEach(function(cat) { %>
+              <option value="<%= cat %>" <%= selectedCategory === cat ? 'selected' : '' %>><%= cat %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label for="availability" class="form-label fw-semibold small text-muted">Availability</label>
+          <select class="form-select" id="availability" name="availability">
+            <option value="all" <%= selectedAvailability === 'all' ? 'selected' : '' %>>All Books</option>
+            <option value="available" <%= selectedAvailability === 'available' ? 'selected' : '' %>>Available Only</option>
+            <option value="unavailable" <%= selectedAvailability === 'unavailable' ? 'selected' : '' %>>Checked Out</option>
+          </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100 fw-semibold">
+            <i class="bi bi-funnel me-1"></i> Filter
+          </button>
+          <a href="/catalog" class="btn btn-outline-secondary" title="Reset Filters">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted small">
+      Showing <strong><%= books.length %></strong> of <strong><%= totalBooks %></strong> books in catalog
+    </span>
+    <% if (searchQuery || selectedCategory !== 'All' || selectedAvailability !== 'all') { %>
+      <span class="badge bg-light text-dark border">
+        Filters Active
+        <a href="/catalog" class="text-dark ms-1"><i class="bi bi-x-circle"></i></a>
+      </span>
+    <% } %>
+  </div>
+
+  <!-- Book Grid -->
+  <div class="row g-4 mb-4">
+    <% if (books.length === 0) { %>
+      <div class="col-12">
+        <div class="card border-0 py-5 text-center shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
+            <h5 class="fw-bold">No Books Found</h5>
+            <p class="text-muted">No books matched your search criteria. Try a different query or reset filters.</p>
+            <a href="/catalog" class="btn btn-outline-primary btn-sm mt-2">Clear Search Filters</a>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <% books.forEach(function(book) { %>
+        <div class="col-sm-6 col-md-4 col-xl-3">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+            <!-- Top Book Header Graphic -->
+            <div class="book-cover-placeholder">
+              <i class="bi bi-book fs-1 mb-2 text-white-50"></i>
+              <span class="badge bg-light text-dark small fw-medium"><%= book.category || 'General' %></span>
+            </div>
+
+            <div class="card-body d-flex flex-column p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-secondary-subtle text-secondary code-font fs-8"><%= book.bookId %></span>
+                <% if (book.availableCopies > 0) { %>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-check-circle-fill me-1"></i><%= book.availableCopies %> Available
+                  </span>
+                <% } else { %>
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                    <i class="bi bi-dash-circle me-1"></i>Checked Out
+                  </span>
+                <% } %>
+              </div>
+
+              <h6 class="fw-bold text-dark mb-1 text-truncate-2" title="<%= book.title %>"><%= book.title %></h6>
+              <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i><%= book.author %></p>
+
+              <div class="small text-muted mb-3">
+                <div><i class="bi bi-geo-alt me-1"></i>Shelf: <span class="fw-semibold text-dark"><%= book.shelfLocation || 'Main Stack' %></span></div>
+                <% if (book.isbn) { %>
+                  <div><i class="bi bi-upc-scan me-1"></i>ISBN: <span class="code-font"><%= book.isbn %></span></div>
+                <% } %>
+              </div>
+
+              <div class="mt-auto pt-2 border-top d-flex gap-2">
+                <a href="/catalog/<%= book._id %>" class="btn btn-outline-primary btn-sm flex-grow-1 fw-semibold">
+                  <i class="bi bi-info-circle me-1"></i> Details
+                </a>
+
+                <% if (user && user.role === 'PATRON') { %>
+                  <% if (book.availableCopies > 0) { %>
+                    <a href="/patron/request-submit?type=RESERVATION&bookId=<%= book._id %>" class="btn btn-primary btn-sm fw-semibold" title="Place Reservation Request">
+                      <i class="bi bi-bookmark-plus"></i> Reserve
+                    </a>
+                  <% } else { %>
+                    <a href="/patron/request-submit?type=RESERVATION&bookId=<%= book._id %>" class="btn btn-warning btn-sm fw-semibold" title="Join waiting queue">
+                      <i class="bi bi-clock-history"></i> Queue
+                    </a>
+                  <% } %>
+                <% } else if (user && user.role === 'STAFF') { %>
+                  <% if (book.availableCopies > 0) { %>
+                    <a href="/staff/circulation/issue?bookId=<%= book._id %>" class="btn btn-success btn-sm fw-semibold" title="Issue to patron">
+                      <i class="bi bi-box-arrow-up-right me-1"></i> Issue
+                    </a>
+                  <% } %>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <!-- Pagination Controls -->
+  <% if (totalPages > 1) { %>
+    <nav aria-label="Catalog pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="/catalog?search=<%= searchQuery %>&category=<%= selectedCategory %>&availability=<%= selectedAvailability %>&page=<%= currentPage - 1 %>">Previous</a>
+        </li>
+        <% for(let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+            <a class="page-link" href="/catalog?search=<%= searchQuery %>&category=<%= selectedCategory %>&availability=<%= selectedAvailability %>&page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="/catalog?search=<%= searchQuery %>&category=<%= selectedCategory %>&availability=<%= selectedAvailability %>&page=<%= currentPage + 1 %>">Next</a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

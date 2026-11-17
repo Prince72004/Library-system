@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-primary-subtle text-primary fw-bold">ALERTS & NOTIFICATIONS (FR-008)</span>
+      <h3 class="fw-bold text-dark mb-0">My Notifications</h3>
+      <p class="text-muted small mb-0">Due date alerts, overdue reminders, and service request progress</p>
+    </div>
+    <% if (notifications.length > 0) { %>
+      <form action="/patron/notifications/read-all" method="POST">
+        <button type="submit" class="btn btn-outline-secondary btn-sm fw-semibold">
+          <i class="bi bi-check2-all me-1"></i> Mark All as Read
+        </button>
+      </form>
+    <% } %>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (notifications.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-bell-slash fs-1 text-muted mb-3 d-block"></i>
+          <h5 class="fw-bold">No Notifications</h5>
+          <p class="text-muted">You are all caught up! There are no alerts for your account right now.</p>
+        </div>
+      <% } else { %>
+        <div class="list-group list-group-flush">
+          <% notifications.forEach(function(n) { %>
+            <div class="list-group-item p-4 d-flex justify-content-between align-items-start border-bottom <%= n.status === 'UNREAD' ? 'bg-primary bg-opacity-10' : '' %>">
+              <div class="d-flex gap-3">
+                <div class="p-2 rounded-circle <%= n.type === 'OVERDUE' ? 'bg-danger text-white' : (n.type === 'DUE_REMINDER' ? 'bg-warning text-dark' : 'bg-primary text-white') %>" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                  <i class="bi <%= n.type === 'OVERDUE' ? 'bi-exclamation-triangle-fill' : (n.type === 'DUE_REMINDER' ? 'bi-alarm-fill' : 'bi-bell-fill') %>"></i>
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <h6 class="fw-bold text-dark mb-0"><%= n.title %></h6>
+                    <% if (n.status === 'UNREAD') { %>
+                      <span class="badge bg-primary fs-8">NEW</span>
+                    <% } %>
+                  </div>
+                  <p class="text-muted mb-2"><%= n.message %></p>
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted"><i class="bi bi-clock me-1"></i><%= new Date(n.createdAt).toLocaleString() %></small>
+                    <% if (n.link && n.link !== '#') { %>
+                      <a href="<%= n.link %>" class="small fw-semibold text-primary text-decoration-none">
+                        View Details <i class="bi bi-arrow-right"></i>
+                      </a>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <% if (n.status === 'UNREAD') { %>
+                  <form action="/patron/notifications/<%= n._id %>/read" method="POST">
+                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Mark as Read">
+                      <i class="bi bi-check2"></i>
+                    </button>
+                  </form>
+                <% } else { %>
+                  <span class="badge bg-light text-muted border"><i class="bi bi-check2-all"></i> Read</span>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

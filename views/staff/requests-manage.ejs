@@ -1,0 +1,128 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-warning text-dark fw-bold">REQUEST MANAGEMENT (FR-005)</span>
+      <h3 class="fw-bold text-dark mb-0">Service Requests Management</h3>
+      <p class="text-muted small mb-0">Review, validate, approve, reject, and resolve patron requests</p>
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        <!-- Status Filter -->
+        <div class="col-lg-7">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="small fw-semibold text-muted me-1"><i class="bi bi-funnel me-1"></i>Status:</span>
+            <a href="/staff/requests?type=<%= selectedType %>" class="btn btn-sm <%= selectedStatus === 'ALL' ? 'btn-primary' : 'btn-outline-secondary' %>">All</a>
+            <a href="/staff/requests?status=PENDING&type=<%= selectedType %>" class="btn btn-sm <%= selectedStatus === 'PENDING' ? 'btn-warning text-dark fw-semibold' : 'btn-outline-secondary' %>">Pending</a>
+            <a href="/staff/requests?status=APPROVED&type=<%= selectedType %>" class="btn btn-sm <%= selectedStatus === 'APPROVED' ? 'btn-info text-white' : 'btn-outline-secondary' %>">Approved</a>
+            <a href="/staff/requests?status=RESOLVED&type=<%= selectedType %>" class="btn btn-sm <%= selectedStatus === 'RESOLVED' ? 'btn-success' : 'btn-outline-secondary' %>">Resolved</a>
+            <a href="/staff/requests?status=REJECTED&type=<%= selectedType %>" class="btn btn-sm <%= selectedStatus === 'REJECTED' ? 'btn-danger' : 'btn-outline-secondary' %>">Rejected</a>
+          </div>
+        </div>
+
+        <!-- Type Filter -->
+        <div class="col-lg-5">
+          <div class="d-flex flex-wrap align-items-center justify-content-lg-end gap-2">
+            <span class="small fw-semibold text-muted me-1">Type:</span>
+            <a href="/staff/requests?status=<%= selectedStatus %>" class="btn btn-sm <%= selectedType === 'ALL' ? 'btn-dark' : 'btn-outline-secondary' %>">All Types</a>
+            <a href="/staff/requests?status=<%= selectedStatus %>&type=RESERVATION" class="btn btn-sm <%= selectedType === 'RESERVATION' ? 'btn-dark' : 'btn-outline-secondary' %>">Reservations</a>
+            <a href="/staff/requests?status=<%= selectedStatus %>&type=RENEWAL" class="btn btn-sm <%= selectedType === 'RENEWAL' ? 'btn-dark' : 'btn-outline-secondary' %>">Renewals</a>
+            <a href="/staff/requests?status=<%= selectedStatus %>&type=COMPLAINT" class="btn btn-sm <%= selectedType === 'COMPLAINT' ? 'btn-dark' : 'btn-outline-secondary' %>">Complaints</a>
+            <a href="/staff/requests?status=<%= selectedStatus %>&type=SUGGESTION" class="btn btn-sm <%= selectedType === 'SUGGESTION' ? 'btn-dark' : 'btn-outline-secondary' %>">Suggestions</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requests Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (requests.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+          <h5 class="fw-bold">No Service Requests Found</h5>
+          <p class="text-muted">No requests currently match the selected filters.</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Request ID</th>
+                <th>Type</th>
+                <th>Patron Details</th>
+                <th>Subject / Target Book</th>
+                <th>Submission Date</th>
+                <th>Status</th>
+                <th class="pe-4 text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% requests.forEach(function(r) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= r.requestId %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary-subtle text-secondary fw-semibold"><%= r.type %></span>
+                  </td>
+                  <td>
+                    <% if (r.userId) { %>
+                      <div class="fw-semibold text-dark"><%= r.userId.name %></div>
+                      <small class="text-muted"><%= r.userId.email %> &bull; <code class="text-primary"><%= r.userId.userId %></code></small>
+                    <% } else { %>
+                      <span class="text-muted">Unknown Patron</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (r.type === 'SUGGESTION') { %>
+                      <div class="fw-semibold text-dark"><%= r.suggestedTitle %></div>
+                      <small class="text-muted"><%= r.suggestedAuthor ? 'By ' + r.suggestedAuthor : 'New Title Recommendation' %></small>
+                    <% } else if (r.bookId) { %>
+                      <div class="fw-semibold text-dark"><%= r.bookId.title %></div>
+                      <small class="text-muted">Stock: <%= r.bookId.availableCopies %> copies</small>
+                    <% } else if (r.circulationId && r.circulationId.bookId) { %>
+                      <div class="fw-semibold text-dark"><%= r.circulationId.bookId.title %></div>
+                      <small class="text-muted">Current Loan Renewal</small>
+                    <% } else { %>
+                      <span class="text-muted small"><%= r.details %></span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-muted"><%= new Date(r.submittedAt).toLocaleDateString() %></small>
+                  </td>
+                  <td>
+                    <% if (r.status === 'PENDING') { %>
+                      <span class="badge badge-pending px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>PENDING</span>
+                    <% } else if (r.status === 'APPROVED') { %>
+                      <span class="badge badge-approved px-2 py-1"><i class="bi bi-check-circle me-1"></i>APPROVED</span>
+                    <% } else if (r.status === 'RESOLVED') { %>
+                      <span class="badge badge-resolved px-2 py-1"><i class="bi bi-patch-check-fill me-1"></i>RESOLVED</span>
+                    <% } else { %>
+                      <span class="badge badge-rejected px-2 py-1"><i class="bi bi-x-circle me-1"></i>REJECTED</span>
+                    <% } %>
+                  </td>
+                  <td class="pe-4 text-end">
+                    <a href="/staff/requests/<%= r._id %>" class="btn btn-outline-primary btn-sm fw-semibold">
+                      Review <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

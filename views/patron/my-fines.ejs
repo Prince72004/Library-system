@@ -1,0 +1,119 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-warning-subtle text-warning fw-bold">FINE MANAGEMENT (FR-007)</span>
+      <h3 class="fw-bold text-dark mb-0">My Library Fines & Charges</h3>
+      <p class="text-muted small mb-0">Transparent breakdown of overdue book penalties and payment statuses</p>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted small fw-semibold">TOTAL PENDING FINES</span>
+            <h2 class="fw-bold text-danger my-1">₹ <%= totalPending %></h2>
+            <small class="text-muted">Payable in-person at the library circulation desk</small>
+          </div>
+          <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle">
+            <i class="bi bi-exclamation-octagon fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-success">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted small fw-semibold">TOTAL SETTLED / PAID FINES</span>
+            <h2 class="fw-bold text-success my-1">₹ <%= totalPaid %></h2>
+            <small class="text-muted">Successfully cleared and acknowledged</small>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
+            <i class="bi bi-patch-check fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fines Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (fines.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-shield-check fs-1 text-success mb-3 d-block"></i>
+          <h5 class="fw-bold">No Fines On Record</h5>
+          <p class="text-muted">You have a clear borrowing record with no overdue penalties!</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Fine ID</th>
+                <th>Book / Circulation</th>
+                <th>Reason</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date Assessed</th>
+                <th class="pe-4">Date Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% fines.forEach(function(f) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= f.fineId %></span>
+                  </td>
+                  <td>
+                    <% if (f.circulationId && f.circulationId.bookId) { %>
+                      <div class="fw-semibold text-dark"><%= f.circulationId.bookId.title %></div>
+                      <small class="text-muted code-font"><%= f.circulationId.circulationId %></small>
+                    <% } else { %>
+                      <span class="text-muted">Circulation Record</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="small text-dark"><%= f.reason %></span>
+                  </td>
+                  <td>
+                    <span class="fw-bold text-<%= f.status === 'PENDING' ? 'danger' : 'success' %>">₹ <%= f.amount %></span>
+                  </td>
+                  <td>
+                    <% if (f.status === 'PENDING') { %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">PENDING</span>
+                    <% } else if (f.status === 'PAID') { %>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">PAID</span>
+                    <% } else { %>
+                      <span class="badge bg-secondary-subtle text-secondary border">WAIVED</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <small class="text-muted"><%= new Date(f.createdAt).toLocaleDateString() %></small>
+                  </td>
+                  <td class="pe-4">
+                    <% if (f.paidAt) { %>
+                      <small class="text-success"><%= new Date(f.paidAt).toLocaleDateString() %></small>
+                    <% } else { %>
+                      <span class="text-muted small">-</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

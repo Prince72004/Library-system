@@ -1,0 +1,126 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-danger text-white fw-bold">OVERDUE AUDIT REPORT (FR-010)</span>
+      <h3 class="fw-bold text-dark mb-0">Overdue Books & Penalty Report</h3>
+      <p class="text-muted small mb-0">Audit of books exceeding borrowing period with accumulated penalty calculations</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/reports/overdue?format=csv" class="btn btn-outline-success btn-sm fw-semibold">
+        <i class="bi bi-file-earmark-excel me-1"></i> Export to CSV
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-secondary btn-sm no-print">
+        <i class="bi bi-printer me-1"></i> Print Report
+      </button>
+      <a href="/reports" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Reports Home
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger">
+        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted small fw-semibold">TOTAL OVERDUE COPIES</span>
+            <h3 class="fw-bold text-danger my-1"><%= overdueLoans.length %> Books</h3>
+            <small class="text-muted">Unreturned beyond due date</small>
+          </div>
+          <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle">
+            <i class="bi bi-exclamation-triangle fs-3"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-warning">
+        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted small fw-semibold">ACCUMULATED PENALTIES</span>
+            <h3 class="fw-bold text-dark my-1">₹ <%= totalAccumulatedFine %></h3>
+            <small class="text-muted">Calculated at ₹ <%= config.fineRatePerDay %>/day</small>
+          </div>
+          <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle">
+            <i class="bi bi-cash-stack fs-3"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue Table -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <% if (overdueLoans.length === 0) { %>
+        <div class="text-center py-5">
+          <i class="bi bi-check2-circle fs-1 text-success mb-3 d-block"></i>
+          <h5 class="fw-bold">No Overdue Books</h5>
+          <p class="text-muted">All active book loans are currently within their authorized due dates!</p>
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Circulation ID</th>
+                <th>Patron Details</th>
+                <th>Book Title</th>
+                <th>Copy ID</th>
+                <th>Due Date</th>
+                <th>Days Late</th>
+                <th>Fine Rate</th>
+                <th>Accrued Fine (Rs)</th>
+                <th class="pe-4 text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% overdueLoans.forEach(function(item) { %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-light text-dark border code-font fs-8"><%= item.circulationId %></span>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark"><%= item.userId ? item.userId.name : 'Unknown' %></div>
+                    <small class="text-muted"><%= item.userId ? item.userId.email : '' %> &bull; <%= item.userId ? item.userId.phone : '' %></small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark"><%= item.bookId ? item.bookId.title : 'Book' %></div>
+                    <small class="text-muted code-font"><%= item.bookId ? item.bookId.bookId : '' %></small>
+                  </td>
+                  <td>
+                    <span class="badge bg-dark text-white code-font fs-8"><i class="bi bi-upc-scan me-1"></i><%= item.copyCode || 'Standard' %></span>
+                  </td>
+                  <td>
+                    <small class="text-danger fw-bold"><%= new Date(item.dueDate).toLocaleDateString() %></small>
+                  </td>
+                  <td>
+                    <span class="badge badge-overdue fs-8"><%= item.daysOverdue %> Days</span>
+                  </td>
+                  <td>
+                    <small class="text-muted">₹ <%= config.fineRatePerDay %> / day</small>
+                  </td>
+                  <td>
+                    <span class="fw-bold text-danger">₹ <%= item.calculatedFine %></span>
+                  </td>
+                  <td class="pe-4 text-end">
+                    <a href="/staff/circulation/return?search=<%= item.circulationId %>" class="btn btn-warning btn-sm fw-semibold text-dark">
+                      Return Book
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

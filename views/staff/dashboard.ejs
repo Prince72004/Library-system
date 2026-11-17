@@ -1,0 +1,299 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="container-fluid px-lg-4 py-4 flex-grow-1">
+  <!-- Staff Header Banner -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-warning text-dark fw-bold mb-1">STAFF CONTROL DASHBOARD (FR-009)</span>
+          <h3 class="fw-bold text-dark mb-0">Library Operations Command Center</h3>
+          <p class="text-muted small mb-0 mt-1">
+            Department of Computer Science &bull; Aligarh Muslim University &bull; Logged in as: <strong class="text-dark"><%= user.name %></strong>
+          </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="/staff/circulation/issue" class="btn btn-success btn-sm fw-semibold shadow-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Issue Book
+          </a>
+          <a href="/staff/circulation/return" class="btn btn-warning btn-sm fw-semibold shadow-sm text-dark">
+            <i class="bi bi-box-arrow-in-down-left me-1"></i> Return Book
+          </a>
+          <a href="/staff/books/add" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Add Book
+          </a>
+          <a href="/reports" class="btn btn-outline-secondary btn-sm fw-semibold">
+            <i class="bi bi-bar-chart-line me-1"></i> Reports
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="row g-3 mb-4">
+    <!-- Total Books -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-primary h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">CATALOG TITLES</span>
+          <h3 class="fw-bold text-dark my-1"><%= stats.totalBooks %></h3>
+          <span class="small text-muted"><%= stats.availableBooks %> in stock</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Circulations -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-info h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">ISSUED COPIES</span>
+          <h3 class="fw-bold text-primary my-1"><%= stats.issuedBooks %></h3>
+          <a href="/staff/circulation" class="small text-decoration-none fw-semibold">Active loans <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overdue Books -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">OVERDUE BOOKS</span>
+          <h3 class="fw-bold text-danger my-1"><%= stats.overdueBooks %></h3>
+          <a href="/reports/overdue" class="small text-danger text-decoration-none fw-semibold">Overdue list <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-warning h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">PENDING REQUESTS</span>
+          <h3 class="fw-bold text-warning my-1"><%= stats.pendingRequests %></h3>
+          <a href="/staff/requests?status=PENDING" class="small text-warning text-decoration-none fw-semibold">Needs review <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Fines -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-danger h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">PENDING FINES</span>
+          <h3 class="fw-bold text-danger my-1">₹ <%= stats.totalPendingFine %></h3>
+          <a href="/staff/fines?status=PENDING" class="small text-decoration-none fw-semibold">Uncollected <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fines Collected -->
+    <div class="col-sm-6 col-xl-2">
+      <div class="card border-0 shadow-sm rounded-4 card-kpi card-kpi-success h-100">
+        <div class="card-body p-3">
+          <span class="text-muted small fw-semibold">COLLECTED FINES</span>
+          <h3 class="fw-bold text-success my-1">₹ <%= stats.totalCollectedFine %></h3>
+          <a href="/staff/fines?status=PAID" class="small text-success text-decoration-none fw-semibold">Settled history <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operational Charts Row -->
+  <div class="row g-4 mb-4">
+    <!-- Category Distribution Chart -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Catalog Distribution by Category</h5>
+          <small class="text-muted">Inventory volume across departments and subjects</small>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div style="height: 250px;">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Request Distribution Chart -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Service Requests by Type</h5>
+          <small class="text-muted">Proportion of reservations, renewals, complaints & suggestions</small>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div style="height: 250px;">
+            <canvas id="requestChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Queues & Activity Row -->
+  <div class="row g-4">
+    <!-- Pending Requests Queue -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-inbox-fill me-2 text-warning"></i>Pending Requests Queue</h5>
+            <small class="text-muted">Patron requests requiring staff approval or resolution</small>
+          </div>
+          <a href="/staff/requests?status=PENDING" class="btn btn-outline-secondary btn-sm">Manage All</a>
+        </div>
+        <div class="card-body px-4">
+          <% if (recentRequests.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
+              No pending service requests. The queue is clear!
+            </div>
+          <% } else { %>
+            <div class="list-group list-group-flush">
+              <% recentRequests.forEach(function(reqItem) { %>
+                <div class="list-group-item px-0 py-3 border-bottom d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="badge bg-light text-dark border code-font fs-8"><%= reqItem.requestId %></span>
+                      <span class="badge bg-secondary-subtle text-secondary fw-semibold"><%= reqItem.type %></span>
+                      <span class="small fw-semibold text-dark"><%= reqItem.userId ? reqItem.userId.name : 'Unknown User' %></span>
+                    </div>
+                    <div class="small text-muted text-truncate-2" style="max-width: 350px;">
+                      <%= reqItem.bookId ? reqItem.bookId.title : (reqItem.suggestedTitle || reqItem.details) %>
+                    </div>
+                  </div>
+                  <div>
+                    <a href="/staff/requests/<%= reqItem._id %>" class="btn btn-sm btn-primary fw-semibold">
+                      Review <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Circulations Table -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Circulation Activity</h5>
+            <small class="text-muted">Latest issue and return transactions</small>
+          </div>
+          <a href="/staff/circulation" class="btn btn-outline-secondary btn-sm">Full History</a>
+        </div>
+        <div class="card-body px-4">
+          <% if (recentCirculations.length === 0) { %>
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+              No circulation records found.
+            </div>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Patron</th>
+                    <th>Book</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% recentCirculations.forEach(function(c) { %>
+                    <% const isOverdue = !c.returnDate && (new Date() > new Date(c.dueDate)); %>
+                    <tr>
+                      <td>
+                        <div class="small fw-semibold text-dark"><%= c.userId ? c.userId.name : 'Patron' %></div>
+                        <small class="text-muted"><%= c.userId ? c.userId.userId : '' %></small>
+                      </td>
+                      <td>
+                        <div class="small fw-semibold text-dark text-truncate" style="max-width: 160px;"><%= c.bookId ? c.bookId.title : 'Book' %></div>
+                      </td>
+                      <td>
+                        <small class="<%= isOverdue ? 'text-danger fw-bold' : 'text-muted' %>"><%= new Date(c.dueDate).toLocaleDateString() %></small>
+                      </td>
+                      <td>
+                        <% if (c.status === 'RETURNED') { %>
+                          <span class="badge bg-success-subtle text-success border border-success-subtle">Returned</span>
+                        <% } else if (isOverdue) { %>
+                          <span class="badge bg-danger">Overdue</span>
+                        <% } else { %>
+                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Issued</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Initialization Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const categoryData = <%- categoryStats %>;
+    const requestData = <%- requestStats %>;
+
+    // Category Chart
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx) {
+      new Chart(catCtx, {
+        type: 'bar',
+        data: {
+          labels: categoryData.map(c => c._id || 'Unassigned'),
+          datasets: [{
+            label: 'Books Count',
+            data: categoryData.map(c => c.count),
+            backgroundColor: '#0d6efd',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
+
+    // Request Types Chart
+    const reqCtx = document.getElementById('requestChart');
+    if (reqCtx) {
+      new Chart(reqCtx, {
+        type: 'doughnut',
+        data: {
+          labels: requestData.map(r => r._id),
+          datasets: [{
+            data: requestData.map(r => r.count),
+            backgroundColor: ['#0d6efd', '#ffc107', '#dc3545', '#198754']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>
