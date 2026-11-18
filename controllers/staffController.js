@@ -1178,18 +1178,20 @@ module.exports = {
         return res.redirect('/staff/users/add-staff');
       }
 
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Auto-generate userId like STF-2026-XXXX
+      const staffCount = await User.countDocuments({ role: 'STAFF' });
+      const year = new Date().getFullYear();
+      const userId = `STF-${year}-${String(staffCount + 1).padStart(4, '0')}`;
 
       await User.create({
+        userId,
         name,
         email: email.toLowerCase(),
-        password: hashedPassword,
+        password,  // plain text — pre('save') hook will hash it
         role: 'STAFF',
         phone: phone || '',
         department: department || 'Library Administration',
-        accountStatus: 'ACTIVE',
-        isActive: true
+        accountStatus: 'ACTIVE'
       });
 
       req.flash('success_msg', `Staff account for ${name} created successfully!`);
