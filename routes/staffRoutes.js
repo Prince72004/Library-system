@@ -41,8 +41,6 @@ router.post('/fines/:id/status', staffController.postUpdateFineStatus);
 // User Accounts Management
 router.get('/users', staffController.getUsers);
 router.post('/users/:id/toggle', staffController.postToggleUserStatus);
-router.get('/users/add-staff', staffController.getAddStaffUser);
-router.post('/users/add-staff', staffController.postAddStaffUser);
 
 // System Configuration & Library Rules
 router.get('/settings', staffController.getSettings);
